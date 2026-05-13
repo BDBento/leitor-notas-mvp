@@ -33,5 +33,5 @@ async def upload_imagem(file: UploadFile = File(...)):
 
     return {
         "filename": nome_arquivo,
-        "url": f"/uploads/{nome_arquivo}"
+        "url": f"/arquivos/{nome_arquivo}"
     }
