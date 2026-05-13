@@ -1,0 +1,73 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: leitor_notas_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: leitor_notas
+      POSTGRES_USER: leitor_user
+      POSTGRES_PASSWORD: leitor_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - leitor_notas_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: leitor_notas_backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+    networks:
+      - leitor_notas_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: leitor_notas_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - leitor_notas_network
+
+  bot-telegram:
+    build:
+      context: ./bot-telegram
+      dockerfile: Dockerfile
+    container_name: leitor_notas_bot
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./bot-telegram:/app
+      - ./uploads:/app/uploads
+    depends_on:
+      - backend
+    networks:
+      - leitor_notas_network
+
+volumes:
+  postgres_data:
+
+networks:
+  leitor_notas_network:
+    driver: bridge
