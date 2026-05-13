@@ -1,11 +1,14 @@
 import os
+import bcrypt
+
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -15,19 +18,28 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
+)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def gerar_hash_senha(senha: str) -> str:
-    return pwd_context.hash(senha)
+    senha_bytes = senha.encode("utf-8")
+
+    salt = bcrypt.gensalt()
+
+    senha_hash = bcrypt.hashpw(senha_bytes, salt)
+
+    return senha_hash.decode("utf-8")
 
 
 def verificar_senha(senha: str, senha_hash: str) -> bool:
-    return pwd_context.verify(senha, senha_hash)
+    return bcrypt.checkpw(
+        senha.encode("utf-8"),
+        senha_hash.encode("utf-8")
+    )
 
 
 def criar_token_acesso(data: dict):
@@ -39,7 +51,11 @@ def criar_token_acesso(data: dict):
 
     dados.update({"exp": expiracao})
 
-    token = jwt.encode(dados, SECRET_KEY, algorithm=ALGORITHM)
+    token = jwt.encode(
+        dados,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
 
     return token
 
@@ -55,7 +71,12 @@ def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
         usuario_id = payload.get("sub")
 
         if usuario_id is None:
@@ -64,7 +85,9 @@ def get_current_user(
     except JWTError:
         raise credenciais_invalidas
 
-    usuario = db.query(Usuario).filter(Usuario.id == int(usuario_id)).first()
+    usuario = db.query(Usuario).filter(
+        Usuario.id == int(usuario_id)
+    ).first()
 
     if usuario is None:
         raise credenciais_invalidas
