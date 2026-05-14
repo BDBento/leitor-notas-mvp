@@ -8,6 +8,13 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import Usuario, Gasto
 
+from app.services.ocr_service import executar_ocr
+from app.services.parser_service import (
+    extrair_valor,
+    extrair_data,
+    extrair_estabelecimento
+)
+
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 UPLOAD_DIR = "uploads"
@@ -38,10 +45,20 @@ async def upload_imagem(
         conteudo = await file.read()
         buffer.write(conteudo)
 
+    texto_extraido = executar_ocr(caminho_arquivo)
+
+    valor_total = extrair_valor(texto_extraido)
+    data_gasto = extrair_data(texto_extraido)
+    estabelecimento = extrair_estabelecimento(texto_extraido)
+
     novo_gasto = Gasto(
         usuario_id=usuario_logado.id,
         imagem_url=f"/arquivos/{nome_arquivo}",
-        status_processamento="pendente"
+        texto_extraido=texto_extraido,
+        valor_total=valor_total,
+        data_gasto=data_gasto,
+        estabelecimento=estabelecimento,
+        status_processamento="processado"
     )
 
     db.add(novo_gasto)
@@ -55,3 +72,5 @@ async def upload_imagem(
         "url": f"/arquivos/{nome_arquivo}",
         "status": novo_gasto.status_processamento
     }
+    
+    
