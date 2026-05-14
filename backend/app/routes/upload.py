@@ -1,7 +1,12 @@
 import os
 import uuid
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from sqlalchemy.orm import Session
+
+from app.auth import get_current_user
+from app.database import get_db
+from app.models import Usuario, Gasto
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
@@ -11,8 +16,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 @router.post("/")
-async def upload_imagem(file: UploadFile = File(...)):
-    
+async def upload_imagem(
+    file: UploadFile = File(...),
+    usuario_logado: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     extensoes_permitidas = [".jpg", ".jpeg", ".png", ".pdf"]
 
     extensao = os.path.splitext(file.filename)[1].lower()
@@ -24,14 +32,26 @@ async def upload_imagem(file: UploadFile = File(...)):
         )
 
     nome_arquivo = f"{uuid.uuid4()}{extensao}"
-
     caminho_arquivo = os.path.join(UPLOAD_DIR, nome_arquivo)
 
     with open(caminho_arquivo, "wb") as buffer:
         conteudo = await file.read()
         buffer.write(conteudo)
 
+    novo_gasto = Gasto(
+        usuario_id=usuario_logado.id,
+        imagem_url=f"/arquivos/{nome_arquivo}",
+        status_processamento="pendente"
+    )
+
+    db.add(novo_gasto)
+    db.commit()
+    db.refresh(novo_gasto)
+
     return {
+        "message": "Imagem enviada com sucesso",
+        "gasto_id": novo_gasto.id,
         "filename": nome_arquivo,
-        "url": f"/arquivos/{nome_arquivo}"
+        "url": f"/arquivos/{nome_arquivo}",
+        "status": novo_gasto.status_processamento
     }

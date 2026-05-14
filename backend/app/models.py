@@ -7,6 +7,7 @@ class Gasto(Base):
     __tablename__ = "gastos"
 
     id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, nullable=True)
     data_gasto = Column(Date, nullable=True)
     estabelecimento = Column(String(255), nullable=True)
     categoria = Column(String(100), nullable=True)
