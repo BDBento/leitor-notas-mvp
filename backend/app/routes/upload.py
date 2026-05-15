@@ -18,6 +18,7 @@ from app.services.parser_service import (
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 UPLOAD_DIR = "uploads"
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -35,21 +36,41 @@ async def upload_imagem(
     if extensao not in extensoes_permitidas:
         raise HTTPException(
             status_code=400,
-            detail="Formato de arquivo não permitido"
+            detail="Formato de arquivo não permitido. Envie JPG, PNG ou PDF."
+        )
+
+    conteudo = await file.read()
+
+    if len(conteudo) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Arquivo muito grande. O limite é 10MB."
         )
 
     nome_arquivo = f"{uuid.uuid4()}{extensao}"
     caminho_arquivo = os.path.join(UPLOAD_DIR, nome_arquivo)
 
     with open(caminho_arquivo, "wb") as buffer:
-        conteudo = await file.read()
         buffer.write(conteudo)
 
-    texto_extraido = executar_ocr(caminho_arquivo)
+    texto_extraido = None
+    valor_total = None
+    data_gasto = None
+    estabelecimento = None
+    status_processamento = "pendente"
 
-    valor_total = extrair_valor(texto_extraido)
-    data_gasto = extrair_data(texto_extraido)
-    estabelecimento = extrair_estabelecimento(texto_extraido)
+    try:
+        texto_extraido = executar_ocr(caminho_arquivo)
+
+        valor_total = extrair_valor(texto_extraido)
+        data_gasto = extrair_data(texto_extraido)
+        estabelecimento = extrair_estabelecimento(texto_extraido)
+
+        status_processamento = "processado"
+
+    except Exception as erro:
+        texto_extraido = f"Erro ao processar OCR: {str(erro)}"
+        status_processamento = "erro"
 
     novo_gasto = Gasto(
         usuario_id=usuario_logado.id,
@@ -58,7 +79,7 @@ async def upload_imagem(
         valor_total=valor_total,
         data_gasto=data_gasto,
         estabelecimento=estabelecimento,
-        status_processamento="processado"
+        status_processamento=status_processamento
     )
 
     db.add(novo_gasto)
@@ -70,7 +91,8 @@ async def upload_imagem(
         "gasto_id": novo_gasto.id,
         "filename": nome_arquivo,
         "url": f"/arquivos/{nome_arquivo}",
-        "status": novo_gasto.status_processamento
+        "status": novo_gasto.status_processamento,
+        "valor_total": str(novo_gasto.valor_total) if novo_gasto.valor_total else None,
+        "data_gasto": str(novo_gasto.data_gasto) if novo_gasto.data_gasto else None,
+        "estabelecimento": novo_gasto.estabelecimento
     }
-    
-    
