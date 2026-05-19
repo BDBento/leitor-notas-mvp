@@ -9,3 +9,5 @@ requests
 openai
 bcrypt
 python-jose[cryptography]
+pytesseract
+Pillow
