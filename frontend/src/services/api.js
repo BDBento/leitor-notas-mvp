@@ -15,12 +15,10 @@ export function removeToken() {
 export async function apiFetch(endpoint, options = {}) {
   const token = getToken();
 
-  const headers = {
-    ...(options.headers || {}),
-  };
+  const headers = new Headers(options.headers || {});
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`;
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
@@ -28,9 +26,17 @@ export async function apiFetch(endpoint, options = {}) {
     headers,
   });
 
-  if (!response.ok) {
-    throw new Error("Erro na requisição");
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
   }
 
-  return response.json();
+  if (!response.ok) {
+    throw new Error(data?.detail || "Erro na requisição");
+  }
+
+  return data;
 }

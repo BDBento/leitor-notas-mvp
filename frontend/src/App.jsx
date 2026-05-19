@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { apiFetch, setToken, removeToken, getToken } from "./services/api";
 
+const API_URL = "http://localhost:8000";
+
 function App() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [gastos, setGastos] = useState([]);
   const [logado, setLogado] = useState(Boolean(getToken()));
   const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [arquivo, setArquivo] = useState(null);
 
   async function login(e) {
     e.preventDefault();
@@ -26,7 +30,6 @@ function App() {
 
       setToken(data.access_token);
       setLogado(true);
-      carregarGastos();
     } catch {
       setErro("E-mail ou senha inválidos.");
     }
@@ -41,6 +44,35 @@ function App() {
     }
   }
 
+  async function enviarArquivo(e) {
+    e.preventDefault();
+
+    if (!arquivo) {
+      setErro("Selecione uma imagem antes de enviar.");
+      return;
+    }
+
+    setErro("");
+    setCarregando(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", arquivo);
+
+      await apiFetch("/upload/", {
+        method: "POST",
+        body: formData,
+      });
+
+      setArquivo(null);
+      await carregarGastos();
+    } catch (error) {
+       setErro(error.message || "Erro ao enviar imagem.");
+    } finally {
+      setCarregando(false);
+    }
+  }
+
   function sair() {
     removeToken();
     setLogado(false);
@@ -52,6 +84,10 @@ function App() {
       carregarGastos();
     }
   }, [logado]);
+
+  const total = gastos.reduce((soma, gasto) => {
+    return soma + Number(gasto.valor_total || 0);
+  }, 0);
 
   if (!logado) {
     return (
@@ -107,10 +143,74 @@ function App() {
 
       {erro && <p style={{ color: "red" }}>{erro}</p>}
 
-      <section style={{ marginTop: 30 }}>
+      <section
+        style={{
+          display: "flex",
+          gap: 20,
+          marginTop: 30,
+          marginBottom: 30,
+        }}
+      >
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: 20,
+            borderRadius: 8,
+            minWidth: 220,
+          }}
+        >
+          <h3>Total registrado</h3>
+          <strong>R$ {total.toFixed(2)}</strong>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: 20,
+            borderRadius: 8,
+            minWidth: 220,
+          }}
+        >
+          <h3>Notas enviadas</h3>
+          <strong>{gastos.length}</strong>
+        </div>
+      </section>
+
+      <section
+        style={{
+          border: "1px solid #ddd",
+          padding: 20,
+          borderRadius: 8,
+          marginBottom: 30,
+        }}
+      >
+        <h2>Enviar nova nota</h2>
+
+        <form onSubmit={enviarArquivo}>
+          <input
+            type="file"
+            accept=".jpg,.jpeg,.png,.pdf"
+            onChange={(e) => setArquivo(e.target.files[0])}
+          />
+
+          <button
+            type="submit"
+            disabled={carregando}
+            style={{ marginLeft: 12, padding: "8px 16px" }}
+          >
+            {carregando ? "Processando..." : "Enviar"}
+          </button>
+        </form>
+      </section>
+
+      <section>
         <h2>Gastos cadastrados</h2>
 
-        <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table
+          border="1"
+          cellPadding="10"
+          style={{ borderCollapse: "collapse", width: "100%" }}
+        >
           <thead>
             <tr>
               <th>ID</th>
@@ -130,12 +230,16 @@ function App() {
                 <td>{gasto.data_gasto || "-"}</td>
                 <td>{gasto.estabelecimento || "-"}</td>
                 <td>{gasto.categoria || "-"}</td>
-                <td>{gasto.valor_total ? `R$ ${gasto.valor_total}` : "-"}</td>
+                <td>
+                  {gasto.valor_total
+                    ? `R$ ${Number(gasto.valor_total).toFixed(2)}`
+                    : "-"}
+                </td>
                 <td>{gasto.status_processamento}</td>
                 <td>
                   {gasto.imagem_url ? (
                     <a
-                      href={`http://localhost:8000${gasto.imagem_url}`}
+                      href={`${API_URL}${gasto.imagem_url}`}
                       target="_blank"
                       rel="noreferrer"
                     >
