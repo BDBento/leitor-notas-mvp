@@ -87,6 +87,8 @@ Backend API
 
 ## Funcionalidades implementadas
 
+```
+
 Autenticação
 Cadastro de usuários
 Login JWT
@@ -115,9 +117,9 @@ Upload automático para API
 Processamento OCR
 Retorno de informações processadas
 
-
---------------------------------------------------------------------
-
+```
+---
+```
 
 leitor-notas-mvp/
 │
@@ -143,7 +145,7 @@ leitor-notas-mvp/
 │
 └── README.md
 
-
+```
 ----------------------------------------------------------
 
 
