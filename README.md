@@ -86,6 +86,7 @@ Backend API
 ---
 
 ## Funcionalidades implementadas
+
 Autenticação
 Cadastro de usuários
 Login JWT
