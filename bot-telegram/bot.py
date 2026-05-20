@@ -57,8 +57,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             timeout=30
         )
 
-        dados = response.json()
+        if response.status_code != 200:
+            await update.message.reply_text(
+                f"Erro ao criar acesso.\n"
+                f"Status: {response.status_code}\n"
+                f"Resposta: {response.text[:500]}"
+            )
+            return
 
+        dados = response.json()
         usuario = dados["usuario"]
         senha_temporaria = dados.get("senha_temporaria")
 
@@ -69,9 +76,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         if senha_temporaria:
-            mensagem += (
-                f"Senha temporária:\n{senha_temporaria}\n\n"
-            )
+            mensagem += f"Senha temporária:\n{senha_temporaria}\n\n"
+        else:
+            mensagem += "\nVocê já possui cadastro ativo.\n\n"
 
         mensagem += (
             "Acesse o painel em:\n"
@@ -85,7 +92,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"Erro ao criar acesso:\n{str(erro)}"
         )
-
 
 async def receber_foto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Imagem recebida. Processando...")
@@ -148,6 +154,44 @@ async def receber_documento(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Por enquanto envie como foto. Depois vamos aceitar PDF e documentos."
     )
+    
+    
+async def resetar_senha(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+
+    try:
+        response = requests.post(
+            f"{BACKEND_URL}/auth/telegram-reset-password",
+            json={
+                "telegram_user_id": str(user.id),
+                "nome": user.full_name,
+                "username": user.username
+            },
+            timeout=30
+        )
+
+        if response.status_code != 200:
+            await update.message.reply_text(
+                f"Não consegui resetar sua senha.\n"
+                f"Status: {response.status_code}\n"
+                f"Resposta: {response.text[:500]}"
+            )
+            return
+
+        dados = response.json()
+
+        await update.message.reply_text(
+            "Sua senha temporária foi redefinida.\n\n"
+            f"Login Web:\n{dados['email']}\n\n"
+            f"Nova senha:\n{dados['senha_temporaria']}\n\n"
+            "Acesse:\nhttp://localhost:5173"
+        )
+
+    except Exception as erro:
+        await update.message.reply_text(
+            f"Erro ao resetar senha:\n{str(erro)}"
+        )
+    
 
 
 def main():
@@ -157,6 +201,7 @@ def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("senha", resetar_senha))
     app.add_handler(MessageHandler(filters.PHOTO, receber_foto))
     app.add_handler(MessageHandler(filters.Document.ALL, receber_documento))
 
@@ -167,3 +212,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

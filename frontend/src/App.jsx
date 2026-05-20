@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { apiFetch, setToken, removeToken, getToken } from "./services/api";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const API_URL = "http://localhost:8000";
 
@@ -21,6 +29,11 @@ function App() {
     forma_pagamento: "",
   });
 
+  const [usuario, setUsuario] = useState(null);
+
+  const [novaSenha, setNovaSenha] = useState("");
+  const [mensagemSenha, setMensagemSenha] = useState("");
+
   async function login(e) {
     e.preventDefault();
     setErro("");
@@ -31,10 +44,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          senha,
-        }),
+        body: JSON.stringify({ email, senha }),
       });
 
       setToken(data.access_token);
@@ -50,6 +60,38 @@ function App() {
       setGastos(data);
     } catch {
       setErro("Erro ao carregar gastos.");
+    }
+  }
+
+  async function carregarUsuario() {
+    try {
+      const data = await apiFetch("/auth/me");
+      setUsuario(data);
+    } catch {
+      setErro("Erro ao carregar usuário.");
+    }
+  }
+
+  async function alterarSenha(e) {
+    e.preventDefault();
+
+    setMensagemSenha("");
+
+    try {
+      await apiFetch("/usuarios/alterar-senha", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nova_senha: novaSenha,
+        }),
+      });
+
+      setNovaSenha("");
+      setMensagemSenha("Senha alterada com sucesso.");
+    } catch {
+      setMensagemSenha("Erro ao alterar senha.");
     }
   }
 
@@ -157,12 +199,42 @@ function App() {
   useEffect(() => {
     if (logado) {
       carregarGastos();
+      carregarUsuario();
     }
   }, [logado]);
 
   const total = gastos.reduce((soma, gasto) => {
     return soma + Number(gasto.valor_total || 0);
   }, 0);
+
+  const categoriasAgrupadas = gastos.reduce((acc, gasto) => {
+    const categoria = gasto.categoria || "Outros";
+    const valor = Number(gasto.valor_total || 0);
+
+    if (!acc[categoria]) {
+      acc[categoria] = 0;
+    }
+
+    acc[categoria] += valor;
+
+    return acc;
+  }, {});
+
+  const dadosGrafico = Object.entries(categoriasAgrupadas).map(
+    ([name, value]) => ({
+      name,
+      value,
+    }),
+  );
+
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#A020F0",
+    "#FF4560",
+  ];
 
   if (!logado) {
     return (
@@ -205,10 +277,26 @@ function App() {
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial" }}>
-      <header style={{ display: "flex", justifyContent: "space-between" }}>
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 30,
+          padding: 20,
+          border: "1px solid #ddd",
+          borderRadius: 8,
+        }}
+      >
         <div>
-          <h1>Dashboard de Gastos</h1>
-          <p>Notas processadas pelo OCR</p>
+          <h1 style={{ margin: 0 }}>Dashboard de Gastos</h1>
+
+          <p style={{ marginTop: 8 }}>
+            Usuário:
+            <strong> {usuario?.nome || "Carregando..."}</strong>
+          </p>
+
+          <p style={{ marginTop: 4 }}>{usuario?.email}</p>
         </div>
 
         <button onClick={sair} style={{ height: 40 }}>
@@ -218,19 +306,76 @@ function App() {
 
       {erro && <p style={{ color: "red" }}>{erro}</p>}
 
-      <section style={{ display: "flex", gap: 20, marginTop: 30, marginBottom: 30 }}>
-        <div style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, minWidth: 220 }}>
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 30,
+        }}
+      >
+        <h2>Alterar senha</h2>
+
+        <form onSubmit={alterarSenha}>
+          <input
+            type="password"
+            placeholder="Nova senha"
+            value={novaSenha}
+            onChange={(e) => setNovaSenha(e.target.value)}
+            style={{
+              padding: 10,
+              marginRight: 10,
+              width: 240,
+            }}
+          />
+
+          <button type="submit">Atualizar senha</button>
+        </form>
+
+        {mensagemSenha && <p style={{ marginTop: 10 }}>{mensagemSenha}</p>}
+      </section>
+
+      <section
+        style={{
+          display: "flex",
+          gap: 20,
+          marginTop: 30,
+          marginBottom: 30,
+        }}
+      >
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: 20,
+            borderRadius: 8,
+            minWidth: 220,
+          }}
+        >
           <h3>Total registrado</h3>
           <strong>R$ {total.toFixed(2)}</strong>
         </div>
 
-        <div style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, minWidth: 220 }}>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: 20,
+            borderRadius: 8,
+            minWidth: 220,
+          }}
+        >
           <h3>Notas enviadas</h3>
           <strong>{gastos.length}</strong>
         </div>
       </section>
 
-      <section style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, marginBottom: 30 }}>
+      <section
+        style={{
+          border: "1px solid #ddd",
+          padding: 20,
+          borderRadius: 8,
+          marginBottom: 30,
+        }}
+      >
         <h2>Enviar nova nota</h2>
 
         <form onSubmit={enviarArquivo}>
@@ -251,18 +396,34 @@ function App() {
       </section>
 
       {editando && (
-        <section style={{ border: "1px solid #ccc", padding: 20, borderRadius: 8, marginBottom: 30 }}>
+        <section
+          style={{
+            border: "1px solid #ccc",
+            padding: 20,
+            borderRadius: 8,
+            marginBottom: 30,
+          }}
+        >
           <h2>Editando gasto #{editando}</h2>
 
           <form onSubmit={salvarEdicao}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: 12,
+              }}
+            >
               <div>
                 <label>Data</label>
                 <input
                   type="date"
                   value={formEdicao.data_gasto}
                   onChange={(e) =>
-                    setFormEdicao({ ...formEdicao, data_gasto: e.target.value })
+                    setFormEdicao({
+                      ...formEdicao,
+                      data_gasto: e.target.value,
+                    })
                   }
                   style={{ width: "100%", padding: 8 }}
                 />
@@ -275,7 +436,10 @@ function App() {
                   step="0.01"
                   value={formEdicao.valor_total}
                   onChange={(e) =>
-                    setFormEdicao({ ...formEdicao, valor_total: e.target.value })
+                    setFormEdicao({
+                      ...formEdicao,
+                      valor_total: e.target.value,
+                    })
                   }
                   style={{ width: "100%", padding: 8 }}
                 />
@@ -287,7 +451,10 @@ function App() {
                   type="text"
                   value={formEdicao.estabelecimento}
                   onChange={(e) =>
-                    setFormEdicao({ ...formEdicao, estabelecimento: e.target.value })
+                    setFormEdicao({
+                      ...formEdicao,
+                      estabelecimento: e.target.value,
+                    })
                   }
                   style={{ width: "100%", padding: 8 }}
                 />
@@ -299,7 +466,10 @@ function App() {
                   type="text"
                   value={formEdicao.categoria}
                   onChange={(e) =>
-                    setFormEdicao({ ...formEdicao, categoria: e.target.value })
+                    setFormEdicao({
+                      ...formEdicao,
+                      categoria: e.target.value,
+                    })
                   }
                   style={{ width: "100%", padding: 8 }}
                 />
@@ -311,7 +481,10 @@ function App() {
                   type="text"
                   value={formEdicao.forma_pagamento}
                   onChange={(e) =>
-                    setFormEdicao({ ...formEdicao, forma_pagamento: e.target.value })
+                    setFormEdicao({
+                      ...formEdicao,
+                      forma_pagamento: e.target.value,
+                    })
                   }
                   style={{ width: "100%", padding: 8 }}
                 />
@@ -335,10 +508,53 @@ function App() {
         </section>
       )}
 
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 30,
+        }}
+      >
+        <h2>Gastos por categoria</h2>
+
+        {dadosGrafico.length > 0 ? (
+          <div style={{ width: "100%", height: 350 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={dadosGrafico}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={120}
+                  label
+                >
+                  {dadosGrafico.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p>Nenhum dado disponível para o gráfico.</p>
+        )}
+      </section>
+
       <section>
         <h2>Gastos cadastrados</h2>
 
-        <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table
+          border="1"
+          cellPadding="10"
+          style={{ borderCollapse: "collapse", width: "100%" }}
+        >
           <thead>
             <tr>
               <th>ID</th>
