@@ -20,15 +20,15 @@ BOT_USER_EMAIL = os.getenv("BOT_USER_EMAIL")
 BOT_USER_PASSWORD = os.getenv("BOT_USER_PASSWORD")
 
 
-def obter_token_backend():
-    if not BOT_USER_EMAIL or not BOT_USER_PASSWORD:
-        raise RuntimeError("BOT_USER_EMAIL ou BOT_USER_PASSWORD não configurados no .env")
+def obter_token_backend(update):
+    user = update.effective_user
 
     response = requests.post(
-        f"{BACKEND_URL}/auth/login",
+        f"{BACKEND_URL}/auth/telegram-login",
         json={
-            "email": BOT_USER_EMAIL,
-            "senha": BOT_USER_PASSWORD
+            "telegram_user_id": str(user.id),
+            "nome": user.full_name,
+            "username": user.username
         },
         timeout=30
     )
@@ -44,9 +44,47 @@ def obter_token_backend():
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Olá! Envie uma foto de nota fiscal, recibo ou comprovante para eu processar."
-    )
+    user = update.effective_user
+
+    try:
+        response = requests.post(
+            f"{BACKEND_URL}/auth/telegram-login",
+            json={
+                "telegram_user_id": str(user.id),
+                "nome": user.full_name,
+                "username": user.username
+            },
+            timeout=30
+        )
+
+        dados = response.json()
+
+        usuario = dados["usuario"]
+        senha_temporaria = dados.get("senha_temporaria")
+
+        mensagem = (
+            f"Olá, {user.first_name}!\n\n"
+            "Seu acesso foi configurado com sucesso.\n\n"
+            f"Login Web:\n{usuario['email']}\n"
+        )
+
+        if senha_temporaria:
+            mensagem += (
+                f"Senha temporária:\n{senha_temporaria}\n\n"
+            )
+
+        mensagem += (
+            "Acesse o painel em:\n"
+            "http://localhost:5173\n\n"
+            "Agora envie uma foto de nota fiscal, recibo ou comprovante Pix."
+        )
+
+        await update.message.reply_text(mensagem)
+
+    except Exception as erro:
+        await update.message.reply_text(
+            f"Erro ao criar acesso:\n{str(erro)}"
+        )
 
 
 async def receber_foto(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -61,7 +99,7 @@ async def receber_foto(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await arquivo.download_to_drive(caminho_temp)
 
-        token = obter_token_backend()
+        token = obter_token_backend(update)
 
         with open(caminho_temp, "rb") as imagem:
             files = {

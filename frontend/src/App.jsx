@@ -12,6 +12,15 @@ function App() {
   const [carregando, setCarregando] = useState(false);
   const [arquivo, setArquivo] = useState(null);
 
+  const [editando, setEditando] = useState(null);
+  const [formEdicao, setFormEdicao] = useState({
+    data_gasto: "",
+    estabelecimento: "",
+    categoria: "",
+    valor_total: "",
+    forma_pagamento: "",
+  });
+
   async function login(e) {
     e.preventDefault();
     setErro("");
@@ -67,9 +76,75 @@ function App() {
       setArquivo(null);
       await carregarGastos();
     } catch (error) {
-       setErro(error.message || "Erro ao enviar imagem.");
+      setErro(error.message || "Erro ao enviar imagem.");
     } finally {
       setCarregando(false);
+    }
+  }
+
+  function abrirEdicao(gasto) {
+    setEditando(gasto.id);
+    setFormEdicao({
+      data_gasto: gasto.data_gasto || "",
+      estabelecimento: gasto.estabelecimento || "",
+      categoria: gasto.categoria || "",
+      valor_total: gasto.valor_total || "",
+      forma_pagamento: gasto.forma_pagamento || "",
+    });
+  }
+
+  function cancelarEdicao() {
+    setEditando(null);
+    setFormEdicao({
+      data_gasto: "",
+      estabelecimento: "",
+      categoria: "",
+      valor_total: "",
+      forma_pagamento: "",
+    });
+  }
+
+  async function salvarEdicao(e) {
+    e.preventDefault();
+    setErro("");
+
+    try {
+      await apiFetch(`/gastos/${editando}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data_gasto: formEdicao.data_gasto || null,
+          estabelecimento: formEdicao.estabelecimento || null,
+          categoria: formEdicao.categoria || null,
+          valor_total: formEdicao.valor_total
+            ? Number(formEdicao.valor_total)
+            : null,
+          forma_pagamento: formEdicao.forma_pagamento || null,
+        }),
+      });
+
+      cancelarEdicao();
+      await carregarGastos();
+    } catch (error) {
+      setErro(error.message || "Erro ao salvar edição.");
+    }
+  }
+
+  async function excluirGasto(id) {
+    const confirmar = window.confirm("Deseja realmente excluir este gasto?");
+
+    if (!confirmar) return;
+
+    try {
+      await apiFetch(`/gastos/${id}`, {
+        method: "DELETE",
+      });
+
+      await carregarGastos();
+    } catch (error) {
+      setErro(error.message || "Erro ao excluir gasto.");
     }
   }
 
@@ -143,47 +218,19 @@ function App() {
 
       {erro && <p style={{ color: "red" }}>{erro}</p>}
 
-      <section
-        style={{
-          display: "flex",
-          gap: 20,
-          marginTop: 30,
-          marginBottom: 30,
-        }}
-      >
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: 20,
-            borderRadius: 8,
-            minWidth: 220,
-          }}
-        >
+      <section style={{ display: "flex", gap: 20, marginTop: 30, marginBottom: 30 }}>
+        <div style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, minWidth: 220 }}>
           <h3>Total registrado</h3>
           <strong>R$ {total.toFixed(2)}</strong>
         </div>
 
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: 20,
-            borderRadius: 8,
-            minWidth: 220,
-          }}
-        >
+        <div style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, minWidth: 220 }}>
           <h3>Notas enviadas</h3>
           <strong>{gastos.length}</strong>
         </div>
       </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          padding: 20,
-          borderRadius: 8,
-          marginBottom: 30,
-        }}
-      >
+      <section style={{ border: "1px solid #ddd", padding: 20, borderRadius: 8, marginBottom: 30 }}>
         <h2>Enviar nova nota</h2>
 
         <form onSubmit={enviarArquivo}>
@@ -203,14 +250,95 @@ function App() {
         </form>
       </section>
 
+      {editando && (
+        <section style={{ border: "1px solid #ccc", padding: 20, borderRadius: 8, marginBottom: 30 }}>
+          <h2>Editando gasto #{editando}</h2>
+
+          <form onSubmit={salvarEdicao}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+              <div>
+                <label>Data</label>
+                <input
+                  type="date"
+                  value={formEdicao.data_gasto}
+                  onChange={(e) =>
+                    setFormEdicao({ ...formEdicao, data_gasto: e.target.value })
+                  }
+                  style={{ width: "100%", padding: 8 }}
+                />
+              </div>
+
+              <div>
+                <label>Valor</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formEdicao.valor_total}
+                  onChange={(e) =>
+                    setFormEdicao({ ...formEdicao, valor_total: e.target.value })
+                  }
+                  style={{ width: "100%", padding: 8 }}
+                />
+              </div>
+
+              <div>
+                <label>Estabelecimento</label>
+                <input
+                  type="text"
+                  value={formEdicao.estabelecimento}
+                  onChange={(e) =>
+                    setFormEdicao({ ...formEdicao, estabelecimento: e.target.value })
+                  }
+                  style={{ width: "100%", padding: 8 }}
+                />
+              </div>
+
+              <div>
+                <label>Categoria</label>
+                <input
+                  type="text"
+                  value={formEdicao.categoria}
+                  onChange={(e) =>
+                    setFormEdicao({ ...formEdicao, categoria: e.target.value })
+                  }
+                  style={{ width: "100%", padding: 8 }}
+                />
+              </div>
+
+              <div>
+                <label>Forma de pagamento</label>
+                <input
+                  type="text"
+                  value={formEdicao.forma_pagamento}
+                  onChange={(e) =>
+                    setFormEdicao({ ...formEdicao, forma_pagamento: e.target.value })
+                  }
+                  style={{ width: "100%", padding: 8 }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <button type="submit" style={{ padding: "8px 16px" }}>
+                Salvar
+              </button>
+
+              <button
+                type="button"
+                onClick={cancelarEdicao}
+                style={{ padding: "8px 16px", marginLeft: 8 }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
       <section>
         <h2>Gastos cadastrados</h2>
 
-        <table
-          border="1"
-          cellPadding="10"
-          style={{ borderCollapse: "collapse", width: "100%" }}
-        >
+        <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
               <th>ID</th>
@@ -220,6 +348,7 @@ function App() {
               <th>Valor</th>
               <th>Status</th>
               <th>Imagem</th>
+              <th>Ações</th>
             </tr>
           </thead>
 
@@ -249,12 +378,21 @@ function App() {
                     "-"
                   )}
                 </td>
+                <td>
+                  <button onClick={() => abrirEdicao(gasto)}>Editar</button>
+                  <button
+                    onClick={() => excluirGasto(gasto.id)}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Excluir
+                  </button>
+                </td>
               </tr>
             ))}
 
             {gastos.length === 0 && (
               <tr>
-                <td colSpan="7">Nenhum gasto encontrado.</td>
+                <td colSpan="8">Nenhum gasto encontrado.</td>
               </tr>
             )}
           </tbody>

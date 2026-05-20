@@ -40,7 +40,9 @@ class UsuarioCreate(BaseModel):
 class UsuarioResponse(BaseModel):
     id: int
     nome: str
-    email: str
+    email: str | None = None
+    telegram_user_id: str | None = None
+    telegram_username: str | None = None
 
     class Config:
         from_attributes = True
@@ -54,3 +56,14 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    
+class TelegramLoginRequest(BaseModel):
+    telegram_user_id: str
+    nome: str | None = None
+    username: str | None = None
+
+
+class TelegramLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    usuario: UsuarioResponse
