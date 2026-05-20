@@ -146,19 +146,21 @@ leitor-notas-mvp/
 └── README.md
 
 ```
-----------------------------------------------------------
+---
 
 
-Como executar
-Clonar projeto
+# Como executar
+## Clonar projeto
 git clone https://github.com/BDBento/leitor-notas-mvp.git
 
 
-----------------------------------------------------------
+---
 
-Configurar variáveis .env
+# Configurar variáveis .env
 
-Exemplo:
+## Exemplo:
+
+```
 
 APP_NAME=Leitor de Notas MVP
 
@@ -179,8 +181,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=1440
 BOT_USER_EMAIL=usuario@email.com
 BOT_USER_PASSWORD=123456
 
-
-----------------------------------------------------------
+```
+---
 
 
 Subir containers
