@@ -21,6 +21,9 @@ BOT_USER_PASSWORD = os.getenv("BOT_USER_PASSWORD")
 
 
 def obter_token_backend():
+    if not BOT_USER_EMAIL or not BOT_USER_PASSWORD:
+        raise RuntimeError("BOT_USER_EMAIL ou BOT_USER_PASSWORD não configurados no .env")
+
     response = requests.post(
         f"{BACKEND_URL}/auth/login",
         json={
@@ -30,7 +33,12 @@ def obter_token_backend():
         timeout=30
     )
 
-    response.raise_for_status()
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Erro ao autenticar no backend. "
+            f"Status: {response.status_code}. "
+            f"Resposta: {response.text}"
+        )
 
     return response.json()["access_token"]
 
