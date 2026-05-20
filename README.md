@@ -81,10 +81,11 @@ Telegram Bot
         ↓
 Backend API
 
+```txt
 
-----------------------------------------------------------------------
+---
 
-Funcionalidades implementadas
+## Funcionalidades implementadas
 Autenticação
 Cadastro de usuários
 Login JWT
