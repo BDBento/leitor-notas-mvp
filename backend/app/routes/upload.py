@@ -12,7 +12,8 @@ from app.services.ocr_service import executar_ocr
 from app.services.parser_service import (
     extrair_valor,
     extrair_data,
-    extrair_estabelecimento
+    extrair_estabelecimento,
+    classificar_categoria
 )
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
@@ -65,6 +66,7 @@ async def upload_imagem(
         valor_total = extrair_valor(texto_extraido)
         data_gasto = extrair_data(texto_extraido)
         estabelecimento = extrair_estabelecimento(texto_extraido)
+        categoria = classificar_categoria(texto_extraido)
 
         status_processamento = "processado"
 
@@ -79,6 +81,7 @@ async def upload_imagem(
         valor_total=valor_total,
         data_gasto=data_gasto,
         estabelecimento=estabelecimento,
+        categoria=categoria,
         status_processamento=status_processamento
     )
 
