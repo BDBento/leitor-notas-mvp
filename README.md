@@ -185,23 +185,27 @@ BOT_USER_PASSWORD=123456
 ---
 
 
-Subir containers
+# Subir containers
+```
 docker compose up -d --build
+```
+---
+# URLs do projeto
 
-----------------------------------------------------------
-
-URLs do projeto
-
-Frontend
+## Frontend
 http://localhost:5173
 
-Backend API
+## Backend API
 http://localhost:8000
 
-Swagger
+## Swagger
 http://localhost:8000/docs
 
-Fluxo atual
+---
+
+# Fluxo atual
+
+``` 
 Usuário envia imagem
         ↓
 Upload autenticado
@@ -213,10 +217,14 @@ Parser extrai dados
 Banco PostgreSQL
         ↓
 Dashboard React
+```
 
-----------------------------------------------------------
+---
 
-Melhorias futuras
+# Melhorias futuras
+
+```
+
 OCR híbrido (Tesseract + OpenAI Vision)
 Filtros avançados
 Relatórios mensais
@@ -230,16 +238,18 @@ Mobile App
 Integração WhatsApp
 Filas assíncronas com Celery/RabbitMQ
 Status do projeto
+```
 
-----------------------------------------------------------
+---
 
-🚧 MVP em desenvolvimento
+# 🚧 MVP em desenvolvimento
 
 Projeto funcional em evolução contínua.
 
-----------------------------------------------------------
+---
 
-Autor
+
+## Autor
 
 Bruno Degan Bento
 
