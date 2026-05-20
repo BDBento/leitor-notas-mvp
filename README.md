@@ -66,7 +66,8 @@ O sistema realiza:
 
 # Arquitetura
 
-```txt
+```
+
 Frontend React
         ↓
 API FastAPI
@@ -81,8 +82,7 @@ Telegram Bot
         ↓
 Backend API
 
-```txt
-
+```
 ---
 
 ## Funcionalidades implementadas
