@@ -75,18 +75,50 @@ def extrair_data(texto: str):
         except ValueError:
             pass
 
-    # Formato Pix: Terça, 12/05/2026
+    # Formato com traço: 12-05-2026
+    match = re.search(r"(\d{2}-\d{2}-\d{4})", texto)
+
+    if match:
+        try:
+            return datetime.strptime(match.group(1), "%d-%m-%Y").date()
+        except ValueError:
+            pass
+
+    # Formato Nubank: 18 MAI 2026
+    meses = {
+        "JAN": "01",
+        "FEV": "02",
+        "MAR": "03",
+        "ABR": "04",
+        "MAI": "05",
+        "JUN": "06",
+        "JUL": "07",
+        "AGO": "08",
+        "SET": "09",
+        "OUT": "10",
+        "NOV": "11",
+        "DEZ": "12",
+    }
+
     match = re.search(
-        r"(?:segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)[,\s]+(\d{2}/\d{2}/\d{4})",
+        r"(\d{1,2})\s+(JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ)\s+(\d{4})",
         texto,
         re.IGNORECASE
     )
 
     if match:
-        try:
-            return datetime.strptime(match.group(1), "%d/%m/%Y").date()
-        except ValueError:
-            pass
+        dia = match.group(1).zfill(2)
+        mes = meses.get(match.group(2).upper())
+        ano = match.group(3)
+
+        if mes:
+            try:
+                return datetime.strptime(
+                    f"{dia}/{mes}/{ano}",
+                    "%d/%m/%Y"
+                ).date()
+            except ValueError:
+                pass
 
     return None
 
