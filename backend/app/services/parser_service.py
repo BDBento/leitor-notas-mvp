@@ -149,19 +149,61 @@ def extrair_estabelecimento(texto: str):
 def classificar_categoria(texto: str):
     texto = texto.lower()
 
-    if "pix enviado" in texto or "pix" in texto:
-        return "Transferência Pix"
+    categorias = {
+        "Mercado": [
+            "comper",
+            "assaí",
+            "atacadão",
+            "supermercado",
+            "extra",
+            "mercado",
+            "fort",
+        ],
 
-    if "supermercado" in texto or "mercado" in texto:
-        return "Mercado"
+        "Transporte": [
+            "uber",
+            "99",
+            "posto",
+            "gasolina",
+            "combustivel",
+            "shell",
+            "ipiranga",
+        ],
 
-    if "farmácia" in texto or "farmacia" in texto:
-        return "Saúde"
+        "Farmácia": [
+            "drogasil",
+            "droga raia",
+            "farmacia",
+            "ultrafarma",
+        ],
 
-    if "posto" in texto or "combustível" in texto or "combustivel" in texto:
-        return "Transporte"
+        "Alimentação": [
+            "ifood",
+            "restaurante",
+            "pizza",
+            "burger",
+            "hamburguer",
+            "lanchonete",
+        ],
 
-    if "restaurante" in texto or "lanche" in texto:
-        return "Alimentação"
+        "Pix": [
+            "pix",
+            "comprovante pix",
+            "transferencia pix",
+        ],
+
+        "Saúde": [
+            "hospital",
+            "clinica",
+            "laboratorio",
+            "consulta",
+        ],
+    }
+
+    for categoria, palavras in categorias.items():
+        for palavra in palavras:
+            if palavra in texto:
+                return categoria
 
     return "Outros"
+

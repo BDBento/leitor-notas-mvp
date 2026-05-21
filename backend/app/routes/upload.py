@@ -13,7 +13,7 @@ from app.services.parser_service import (
     extrair_valor,
     extrair_data,
     extrair_estabelecimento,
-    classificar_categoria
+    classificar_categoria,
 )
 
 router = APIRouter(prefix="/upload", tags=["Upload"])
@@ -58,6 +58,7 @@ async def upload_imagem(
     valor_total = None
     data_gasto = None
     estabelecimento = None
+    categoria = "Outros"
     status_processamento = "pendente"
 
     try:
