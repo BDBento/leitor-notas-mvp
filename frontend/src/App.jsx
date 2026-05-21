@@ -19,6 +19,7 @@ function App() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [arquivo, setArquivo] = useState(null);
+  const [mesSelecionado, setMesSelecionado] = useState("");
 
   const [editando, setEditando] = useState(null);
   const [formEdicao, setFormEdicao] = useState({
@@ -190,6 +191,59 @@ function App() {
     }
   }
 
+  function exportarCSV() {
+    if (gastosFiltrados.length === 0) {
+      setErro("Não há dados para exportar.");
+      return;
+    }
+
+    const cabecalho = [
+      "ID",
+      "Data",
+      "Estabelecimento",
+      "Categoria",
+      "Valor",
+      "Forma de pagamento",
+      "Status",
+    ];
+
+    const linhas = gastosFiltrados.map((gasto) => [
+      gasto.id,
+      gasto.data_gasto || "",
+      gasto.estabelecimento || "",
+      gasto.categoria || "",
+      gasto.valor_total || "",
+      gasto.forma_pagamento || "",
+      gasto.status_processamento || "",
+    ]);
+
+    const conteudoCSV = [cabecalho, ...linhas]
+      .map((linha) =>
+        linha
+          .map((campo) => `"${String(campo).replaceAll('"', '""')}"`)
+          .join(";"),
+      )
+      .join("\n");
+
+    const blob = new Blob(["\uFEFF" + conteudoCSV], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = mesSelecionado
+      ? `gastos-${mesSelecionado}.csv`
+      : "gastos.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
   function sair() {
     removeToken();
     setLogado(false);
@@ -203,11 +257,23 @@ function App() {
     }
   }, [logado]);
 
-  const total = gastos.reduce((soma, gasto) => {
+  const gastosFiltrados = gastos.filter((gasto) => {
+    if (!mesSelecionado) {
+      return true;
+    }
+
+    if (!gasto.data_gasto) {
+      return false;
+    }
+
+    return gasto.data_gasto.startsWith(mesSelecionado);
+  });
+
+  const total = gastosFiltrados.reduce((soma, gasto) => {
     return soma + Number(gasto.valor_total || 0);
   }, 0);
 
-  const categoriasAgrupadas = gastos.reduce((acc, gasto) => {
+  const categoriasAgrupadas = gastosFiltrados.reduce((acc, gasto) => {
     const categoria = gasto.categoria || "Outros";
     const valor = Number(gasto.valor_total || 0);
 
@@ -337,6 +403,48 @@ function App() {
 
       <section
         style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 30,
+        }}
+      >
+        <h2>Filtro mensal</h2>
+
+        <input
+          type="month"
+          value={mesSelecionado}
+          onChange={(e) => setMesSelecionado(e.target.value)}
+          style={{
+            padding: 10,
+            marginRight: 10,
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={() => setMesSelecionado("")}
+          style={{
+            padding: "10px 16px",
+          }}
+        >
+          Limpar filtro
+        </button>
+        
+        <button
+          type="button"
+          onClick={exportarCSV}
+          style={{
+            padding: "10px 16px",
+            marginLeft: 10,
+          }}
+        >
+          Exportar CSV
+        </button>
+      </section>
+
+      <section
+        style={{
           display: "flex",
           gap: 20,
           marginTop: 30,
@@ -364,7 +472,7 @@ function App() {
           }}
         >
           <h3>Notas enviadas</h3>
-          <strong>{gastos.length}</strong>
+          <strong>{gastosFiltrados.length}</strong>
         </div>
       </section>
 
@@ -569,7 +677,7 @@ function App() {
           </thead>
 
           <tbody>
-            {gastos.map((gasto) => (
+            {gastosFiltrados.map((gasto) => (
               <tr key={gasto.id}>
                 <td>{gasto.id}</td>
                 <td>{gasto.data_gasto || "-"}</td>
@@ -606,7 +714,7 @@ function App() {
               </tr>
             ))}
 
-            {gastos.length === 0 && (
+            {gastosFiltrados.length === 0 && (
               <tr>
                 <td colSpan="8">Nenhum gasto encontrado.</td>
               </tr>
