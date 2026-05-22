@@ -14,6 +14,8 @@ O projeto possui:
 - Dashboard web
 - Multiusuário
 - Analytics financeiros
+- Exportação CSV
+- Dashboard profissional com sidebar
 
 ---
 
@@ -36,11 +38,11 @@ O sistema realiza:
 1. upload da imagem;
 2. OCR automático;
 3. extração de dados;
-4. classificação inicial;
+4. classificação inteligente;
 5. armazenamento em banco de dados;
-6. exibição em dashboard online;
-7. analytics financeiros;
-8. gerenciamento de usuários.
+6. analytics financeiros;
+7. visualização em dashboard web;
+8. gerenciamento multiusuário.
 
 ---
 
@@ -64,6 +66,7 @@ O sistema realiza:
 - Vite
 - Fetch API
 - Recharts
+- CSS customizado
 
 ## Bot
 
@@ -80,7 +83,7 @@ API FastAPI
         ↓
 OCR Service
         ↓
-Parser Service
+Parser Inteligente
         ↓
 PostgreSQL
 
@@ -93,7 +96,7 @@ Backend API
 
 # Funcionalidades implementadas
 
-## Autenticação
+## 🔐 Autenticação
 
 - Cadastro de usuários
 - Login JWT
@@ -101,18 +104,19 @@ Backend API
 - Controle de acesso por usuário
 - Sessões autenticadas
 - Recuperação de senha via Telegram
-- Integração de usuários Telegram
+- Integração automática de usuários Telegram
 
 ---
 
-## Uploads
+## 📤 Uploads
 
 - Upload autenticado
 - Armazenamento de imagens
 - Proteção de arquivos privados
 - Upload via dashboard
 - Upload via Telegram
-- Suporte inicial para:
+- Preview autenticado de imagens
+- Suporte para:
   - JPG
   - JPEG
   - PNG
@@ -120,7 +124,7 @@ Backend API
 
 ---
 
-## OCR
+## 🤖 OCR Inteligente
 
 OCR local com Tesseract.
 
@@ -129,28 +133,52 @@ Extração automática de:
 - valor;
 - data;
 - estabelecimento;
-- categoria inicial;
+- categoria;
 - forma de pagamento.
 
 ---
 
-## Dashboard
+## 🧠 Parser Inteligente
+
+Reconhecimento automático de:
+
+- comprovantes Nubank;
+- Pix;
+- transferências;
+- comprovantes bancários;
+- notas fiscais.
+
+Tratamento de:
+
+- OCR com ruído;
+- linhas quebradas;
+- datas textuais;
+- informações técnicas do comprovante.
+
+---
+
+## 📊 Dashboard Financeiro
 
 - Login web
+- Sidebar profissional
 - Upload de imagens
 - Listagem de gastos
-- Visualização de comprovantes
+- Visualização autenticada de comprovantes
 - Soma total de gastos
+- Filtro mensal
 - Dashboard financeiro
 - Gráfico de gastos por categoria
+- Ranking financeiro
+- Analytics financeiros
 - Edição manual de registros
 - Exclusão de gastos
 - Perfil do usuário
 - Alteração de senha
+- Exportação CSV
 
 ---
 
-## Telegram
+## 📱 Telegram
 
 - Cadastro automático de usuários
 - Geração automática de login web
@@ -185,6 +213,10 @@ leitor-notas-mvp/
 │
 ├── frontend/
 │   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── services/
+│   │
 │   ├── package.json
 │   └── Dockerfile
 │
@@ -276,7 +308,7 @@ Upload autenticado
         ↓
 OCR local
         ↓
-Parser extrai dados
+Parser inteligente
         ↓
 Banco PostgreSQL
         ↓
@@ -317,6 +349,18 @@ Dados registrados no dashboard
 - Multiusuário
 - Reset de senha
 - Separação de dados por usuário
+- Visualização autenticada de imagens
+
+---
+
+# Analytics implementados
+
+- Total de gastos
+- Quantidade de comprovantes
+- Ranking por categoria
+- Gráfico financeiro
+- Dashboard mensal
+- Exportação CSV
 
 ---
 
@@ -327,19 +371,21 @@ Dados registrados no dashboard
 - OCR híbrido (Tesseract + OpenAI Vision)
 - IA para categorização automática
 - IA para correção de OCR
+- IA para insights financeiros
 - Detecção automática do tipo de comprovante
 
 ---
 
 ## Dashboard
 
-- Filtros avançados
-- Dashboard mensal
+- Tema dark/light
+- Dashboard avançado
 - Comparativo mensal
 - Metas financeiras
 - Insights automáticos
 - Exportação Excel/PDF
 - Relatórios financeiros
+- Upload drag-and-drop
 
 ---
 
@@ -372,12 +418,16 @@ Atualmente já possui:
 
 - autenticação;
 - OCR;
-- dashboard;
+- parser inteligente;
+- dashboard financeiro;
 - analytics;
 - Telegram;
 - multiusuário;
 - uploads protegidos;
-- gerenciamento de usuários.
+- gerenciamento de usuários;
+- exportação CSV;
+- categorização automática;
+- sidebar profissional.
 
 ---
 
