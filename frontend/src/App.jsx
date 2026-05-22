@@ -286,6 +286,13 @@ function App() {
     return acc;
   }, {});
 
+  const rankingCategorias = Object.entries(categoriasAgrupadas)
+    .map(([categoria, valor]) => ({
+      categoria,
+      valor,
+    }))
+    .sort((a, b) => b.valor - a.valor);
+
   const dadosGrafico = Object.entries(categoriasAgrupadas).map(
     ([name, value]) => ({
       name,
@@ -430,7 +437,7 @@ function App() {
         >
           Limpar filtro
         </button>
-        
+
         <button
           type="button"
           onClick={exportarCSV}
@@ -652,6 +659,51 @@ function App() {
           </div>
         ) : (
           <p>Nenhum dado disponível para o gráfico.</p>
+        )}
+      </section>
+
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: 20,
+          marginBottom: 30,
+        }}
+      >
+        <h2>Analytics financeiros</h2>
+
+        {rankingCategorias.length === 0 ? (
+          <p>Nenhum dado disponível.</p>
+        ) : (
+          <table
+            width="100%"
+            border="1"
+            cellPadding="10"
+            style={{
+              borderCollapse: "collapse",
+              marginTop: 20,
+            }}
+          >
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Categoria</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {rankingCategorias.map((item, index) => (
+                <tr key={item.categoria}>
+                  <td>#{index + 1}</td>
+
+                  <td>{item.categoria}</td>
+
+                  <td>R$ {Number(item.valor).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </section>
 
