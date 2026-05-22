@@ -21,6 +21,8 @@ function App() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [arquivo, setArquivo] = useState(null);
+  const [imagemPreview, setImagemPreview] = useState(null);
+  const [carregandoImagem, setCarregandoImagem] = useState(false);
   const [mesSelecionado, setMesSelecionado] = useState("");
 
   const [editando, setEditando] = useState(null);
@@ -246,6 +248,34 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
+  async function abrirImagem(imagemUrl) {
+    setErro("");
+    setCarregandoImagem(true);
+
+    try {
+      const token = getToken();
+
+      const response = await fetch(`${API_URL}${imagemUrl}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao carregar imagem.");
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      setImagemPreview(objectUrl);
+    } catch (error) {
+      setErro(error.message || "Erro ao abrir imagem.");
+    } finally {
+      setCarregandoImagem(false);
+    }
+  }
+
   function sair() {
     removeToken();
     setLogado(false);
@@ -341,6 +371,8 @@ function App() {
           </div>
 
           {erro && <p style={{ color: "red" }}>{erro}</p>}
+          
+          {carregandoImagem && <p>Carregando imagem...</p>}
 
           <button type="submit" style={{ padding: "10px 18px" }}>
             Entrar
@@ -730,6 +762,42 @@ function App() {
           )}
         </section>
 
+        {imagemPreview && (
+          <section
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              padding: 20,
+              marginBottom: 30,
+            }}
+          >
+            <h2>Visualização do comprovante</h2>
+
+            <img
+              src={imagemPreview}
+              alt="Comprovante"
+              style={{
+                maxWidth: "100%",
+                maxHeight: 600,
+                borderRadius: 8,
+                border: "1px solid #ddd",
+              }}
+            />
+
+            <div style={{ marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  URL.revokeObjectURL(imagemPreview);
+                  setImagemPreview(null);
+                }}
+              >
+                Fechar imagem
+              </button>
+            </div>
+          </section>
+        )}
+
         <section id="gastos">
           <h2>Gastos cadastrados</h2>
 
@@ -766,13 +834,12 @@ function App() {
                   <td>{gasto.status_processamento}</td>
                   <td>
                     {gasto.imagem_url ? (
-                      <a
-                        href={`${API_URL}${gasto.imagem_url}`}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => abrirImagem(gasto.imagem_url)}
                       >
                         Ver imagem
-                      </a>
+                      </button>
                     ) : (
                       "-"
                     )}
