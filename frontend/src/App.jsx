@@ -9,6 +9,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import "./App.css";
+
 const API_URL = "http://localhost:8000";
 
 function App() {
@@ -311,7 +313,7 @@ function App() {
 
   if (!logado) {
     return (
-      <main style={{ padding: 40, fontFamily: "Arial", maxWidth: 420 }}>
+      <main className="login-page">
         <h1>Leitor de Notas</h1>
         <h2>Login</h2>
 
@@ -349,432 +351,454 @@ function App() {
   }
 
   return (
-    <main style={{ padding: 40, fontFamily: "Arial" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 30,
-          padding: 20,
-          border: "1px solid #ddd",
-          borderRadius: 8,
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0 }}>Dashboard de Gastos</h1>
-
-          <p style={{ marginTop: 8 }}>
-            Usuário:
-            <strong> {usuario?.nome || "Carregando..."}</strong>
-          </p>
-
-          <p style={{ marginTop: 4 }}>{usuario?.email}</p>
+    <div className="dashboard-layout">
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <strong>Leitor de Notas</strong>
+          <span>MVP Financeiro</span>
         </div>
 
-        <button onClick={sair} style={{ height: 40 }}>
-          Sair
-        </button>
-      </header>
+        <nav className="sidebar-nav">
+          <a href="#dashboard">Dashboard</a>
+          <a href="#upload">Upload</a>
+          <a href="#analytics">Analytics</a>
+          <a href="#gastos">Gastos</a>
+          <a href="#configuracoes">Configurações</a>
+        </nav>
+      </aside>
 
-      {erro && <p style={{ color: "red" }}>{erro}</p>}
+      <main className="app-shell">
+        <header
+          id="dashboard"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 30,
+            padding: 20,
+            border: "1px solid #ddd",
+            borderRadius: 8,
+          }}
+        >
+          <div>
+            <h1 style={{ margin: 0 }}>Dashboard de Gastos</h1>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 30,
-        }}
-      >
-        <h2>Alterar senha</h2>
+            <p style={{ marginTop: 8 }}>
+              Usuário:
+              <strong> {usuario?.nome || "Carregando..."}</strong>
+            </p>
 
-        <form onSubmit={alterarSenha}>
+            <p style={{ marginTop: 4 }}>{usuario?.email}</p>
+          </div>
+
+          <button onClick={sair} style={{ height: 40 }}>
+            Sair
+          </button>
+        </header>
+
+        {erro && <p style={{ color: "red" }}>{erro}</p>}
+
+        <section
+          id="configuracoes"
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 20,
+            marginBottom: 30,
+          }}
+        >
+          <h2>Alterar senha</h2>
+
+          <form onSubmit={alterarSenha}>
+            <input
+              type="password"
+              placeholder="Nova senha"
+              value={novaSenha}
+              onChange={(e) => setNovaSenha(e.target.value)}
+              style={{
+                padding: 10,
+                marginRight: 10,
+                width: 240,
+              }}
+            />
+
+            <button type="submit">Atualizar senha</button>
+          </form>
+
+          {mensagemSenha && <p style={{ marginTop: 10 }}>{mensagemSenha}</p>}
+        </section>
+
+        <section
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 20,
+            marginBottom: 30,
+          }}
+        >
+          <h2>Filtro mensal</h2>
+
           <input
-            type="password"
-            placeholder="Nova senha"
-            value={novaSenha}
-            onChange={(e) => setNovaSenha(e.target.value)}
+            type="month"
+            value={mesSelecionado}
+            onChange={(e) => setMesSelecionado(e.target.value)}
             style={{
               padding: 10,
               marginRight: 10,
-              width: 240,
             }}
           />
 
-          <button type="submit">Atualizar senha</button>
-        </form>
-
-        {mensagemSenha && <p style={{ marginTop: 10 }}>{mensagemSenha}</p>}
-      </section>
-
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 30,
-        }}
-      >
-        <h2>Filtro mensal</h2>
-
-        <input
-          type="month"
-          value={mesSelecionado}
-          onChange={(e) => setMesSelecionado(e.target.value)}
-          style={{
-            padding: 10,
-            marginRight: 10,
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={() => setMesSelecionado("")}
-          style={{
-            padding: "10px 16px",
-          }}
-        >
-          Limpar filtro
-        </button>
-
-        <button
-          type="button"
-          onClick={exportarCSV}
-          style={{
-            padding: "10px 16px",
-            marginLeft: 10,
-          }}
-        >
-          Exportar CSV
-        </button>
-      </section>
-
-      <section
-        style={{
-          display: "flex",
-          gap: 20,
-          marginTop: 30,
-          marginBottom: 30,
-        }}
-      >
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: 20,
-            borderRadius: 8,
-            minWidth: 220,
-          }}
-        >
-          <h3>Total registrado</h3>
-          <strong>R$ {total.toFixed(2)}</strong>
-        </div>
-
-        <div
-          style={{
-            border: "1px solid #ddd",
-            padding: 20,
-            borderRadius: 8,
-            minWidth: 220,
-          }}
-        >
-          <h3>Notas enviadas</h3>
-          <strong>{gastosFiltrados.length}</strong>
-        </div>
-      </section>
-
-      <section
-        style={{
-          border: "1px solid #ddd",
-          padding: 20,
-          borderRadius: 8,
-          marginBottom: 30,
-        }}
-      >
-        <h2>Enviar nova nota</h2>
-
-        <form onSubmit={enviarArquivo}>
-          <input
-            type="file"
-            accept=".jpg,.jpeg,.png,.pdf"
-            onChange={(e) => setArquivo(e.target.files[0])}
-          />
+          <button
+            type="button"
+            onClick={() => setMesSelecionado("")}
+            style={{
+              padding: "10px 16px",
+            }}
+          >
+            Limpar filtro
+          </button>
 
           <button
-            type="submit"
-            disabled={carregando}
-            style={{ marginLeft: 12, padding: "8px 16px" }}
+            type="button"
+            onClick={exportarCSV}
+            style={{
+              padding: "10px 16px",
+              marginLeft: 10,
+            }}
           >
-            {carregando ? "Processando..." : "Enviar"}
+            Exportar CSV
           </button>
-        </form>
-      </section>
+        </section>
 
-      {editando && (
         <section
           style={{
-            border: "1px solid #ccc",
+            display: "flex",
+            gap: 20,
+            marginTop: 30,
+            marginBottom: 30,
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid #ddd",
+              padding: 20,
+              borderRadius: 8,
+              minWidth: 220,
+            }}
+          >
+            <h3>Total registrado</h3>
+            <strong>R$ {total.toFixed(2)}</strong>
+          </div>
+
+          <div
+            style={{
+              border: "1px solid #ddd",
+              padding: 20,
+              borderRadius: 8,
+              minWidth: 220,
+            }}
+          >
+            <h3>Notas enviadas</h3>
+            <strong>{gastosFiltrados.length}</strong>
+          </div>
+        </section>
+
+        <section
+          id="upload"
+          style={{
+            border: "1px solid #ddd",
             padding: 20,
             borderRadius: 8,
             marginBottom: 30,
           }}
         >
-          <h2>Editando gasto #{editando}</h2>
+          <h2>Enviar nova nota</h2>
 
-          <form onSubmit={salvarEdicao}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: 12,
-              }}
+          <form onSubmit={enviarArquivo}>
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              onChange={(e) => setArquivo(e.target.files[0])}
+            />
+
+            <button
+              type="submit"
+              disabled={carregando}
+              style={{ marginLeft: 12, padding: "8px 16px" }}
             >
-              <div>
-                <label>Data</label>
-                <input
-                  type="date"
-                  value={formEdicao.data_gasto}
-                  onChange={(e) =>
-                    setFormEdicao({
-                      ...formEdicao,
-                      data_gasto: e.target.value,
-                    })
-                  }
-                  style={{ width: "100%", padding: 8 }}
-                />
-              </div>
-
-              <div>
-                <label>Valor</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formEdicao.valor_total}
-                  onChange={(e) =>
-                    setFormEdicao({
-                      ...formEdicao,
-                      valor_total: e.target.value,
-                    })
-                  }
-                  style={{ width: "100%", padding: 8 }}
-                />
-              </div>
-
-              <div>
-                <label>Estabelecimento</label>
-                <input
-                  type="text"
-                  value={formEdicao.estabelecimento}
-                  onChange={(e) =>
-                    setFormEdicao({
-                      ...formEdicao,
-                      estabelecimento: e.target.value,
-                    })
-                  }
-                  style={{ width: "100%", padding: 8 }}
-                />
-              </div>
-
-              <div>
-                <label>Categoria</label>
-                <input
-                  type="text"
-                  value={formEdicao.categoria}
-                  onChange={(e) =>
-                    setFormEdicao({
-                      ...formEdicao,
-                      categoria: e.target.value,
-                    })
-                  }
-                  style={{ width: "100%", padding: 8 }}
-                />
-              </div>
-
-              <div>
-                <label>Forma de pagamento</label>
-                <input
-                  type="text"
-                  value={formEdicao.forma_pagamento}
-                  onChange={(e) =>
-                    setFormEdicao({
-                      ...formEdicao,
-                      forma_pagamento: e.target.value,
-                    })
-                  }
-                  style={{ width: "100%", padding: 8 }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <button type="submit" style={{ padding: "8px 16px" }}>
-                Salvar
-              </button>
-
-              <button
-                type="button"
-                onClick={cancelarEdicao}
-                style={{ padding: "8px 16px", marginLeft: 8 }}
-              >
-                Cancelar
-              </button>
-            </div>
+              {carregando ? "Processando..." : "Enviar"}
+            </button>
           </form>
         </section>
-      )}
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 30,
-        }}
-      >
-        <h2>Gastos por categoria</h2>
+        {editando && (
+          <section
+            style={{
+              border: "1px solid #ccc",
+              padding: 20,
+              borderRadius: 8,
+              marginBottom: 30,
+            }}
+          >
+            <h2>Editando gasto #{editando}</h2>
 
-        {dadosGrafico.length > 0 ? (
-          <div style={{ width: "100%", height: 350 }}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={dadosGrafico}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={120}
-                  label
+            <form onSubmit={salvarEdicao}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <label>Data</label>
+                  <input
+                    type="date"
+                    value={formEdicao.data_gasto}
+                    onChange={(e) =>
+                      setFormEdicao({
+                        ...formEdicao,
+                        data_gasto: e.target.value,
+                      })
+                    }
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label>Valor</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formEdicao.valor_total}
+                    onChange={(e) =>
+                      setFormEdicao({
+                        ...formEdicao,
+                        valor_total: e.target.value,
+                      })
+                    }
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label>Estabelecimento</label>
+                  <input
+                    type="text"
+                    value={formEdicao.estabelecimento}
+                    onChange={(e) =>
+                      setFormEdicao({
+                        ...formEdicao,
+                        estabelecimento: e.target.value,
+                      })
+                    }
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label>Categoria</label>
+                  <input
+                    type="text"
+                    value={formEdicao.categoria}
+                    onChange={(e) =>
+                      setFormEdicao({
+                        ...formEdicao,
+                        categoria: e.target.value,
+                      })
+                    }
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+
+                <div>
+                  <label>Forma de pagamento</label>
+                  <input
+                    type="text"
+                    value={formEdicao.forma_pagamento}
+                    onChange={(e) =>
+                      setFormEdicao({
+                        ...formEdicao,
+                        forma_pagamento: e.target.value,
+                      })
+                    }
+                    style={{ width: "100%", padding: 8 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" style={{ padding: "8px 16px" }}>
+                  Salvar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cancelarEdicao}
+                  style={{ padding: "8px 16px", marginLeft: 8 }}
                 >
-                  {dadosGrafico.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p>Nenhum dado disponível para o gráfico.</p>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </section>
         )}
-      </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 30,
-        }}
-      >
-        <h2>Analytics financeiros</h2>
+        <section
+          id="analytics"
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 20,
+            marginBottom: 30,
+          }}
+        >
+          <h2>Gastos por categoria</h2>
 
-        {rankingCategorias.length === 0 ? (
-          <p>Nenhum dado disponível.</p>
-        ) : (
+          {dadosGrafico.length > 0 ? (
+            <div style={{ width: "100%", height: 350 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={dadosGrafico}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={120}
+                    label
+                  >
+                    {dadosGrafico.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p>Nenhum dado disponível para o gráfico.</p>
+          )}
+        </section>
+
+        <section
+          id="analytics"
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            padding: 20,
+            marginBottom: 30,
+          }}
+        >
+          <h2>Analytics financeiros</h2>
+
+          {rankingCategorias.length === 0 ? (
+            <p>Nenhum dado disponível.</p>
+          ) : (
+            <table
+              width="100%"
+              border="1"
+              cellPadding="10"
+              style={{
+                borderCollapse: "collapse",
+                marginTop: 20,
+              }}
+            >
+              <thead>
+                <tr>
+                  <th>Posição</th>
+                  <th>Categoria</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {rankingCategorias.map((item, index) => (
+                  <tr key={item.categoria}>
+                    <td>#{index + 1}</td>
+
+                    <td>{item.categoria}</td>
+
+                    <td>R$ {Number(item.valor).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section id="gastos">
+          <h2>Gastos cadastrados</h2>
+
           <table
-            width="100%"
             border="1"
             cellPadding="10"
-            style={{
-              borderCollapse: "collapse",
-              marginTop: 20,
-            }}
+            style={{ borderCollapse: "collapse", width: "100%" }}
           >
             <thead>
               <tr>
-                <th>Posição</th>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Estabelecimento</th>
                 <th>Categoria</th>
-                <th>Total</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Imagem</th>
+                <th>Ações</th>
               </tr>
             </thead>
 
             <tbody>
-              {rankingCategorias.map((item, index) => (
-                <tr key={item.categoria}>
-                  <td>#{index + 1}</td>
-
-                  <td>{item.categoria}</td>
-
-                  <td>R$ {Number(item.valor).toFixed(2)}</td>
+              {gastosFiltrados.map((gasto) => (
+                <tr key={gasto.id}>
+                  <td>{gasto.id}</td>
+                  <td>{gasto.data_gasto || "-"}</td>
+                  <td>{gasto.estabelecimento || "-"}</td>
+                  <td>{gasto.categoria || "-"}</td>
+                  <td>
+                    {gasto.valor_total
+                      ? `R$ ${Number(gasto.valor_total).toFixed(2)}`
+                      : "-"}
+                  </td>
+                  <td>{gasto.status_processamento}</td>
+                  <td>
+                    {gasto.imagem_url ? (
+                      <a
+                        href={`${API_URL}${gasto.imagem_url}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ver imagem
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td>
+                    <button onClick={() => abrirEdicao(gasto)}>Editar</button>
+                    <button
+                      onClick={() => excluirGasto(gasto.id)}
+                      style={{ marginLeft: 8 }}
+                    >
+                      Excluir
+                    </button>
+                  </td>
                 </tr>
               ))}
+
+              {gastosFiltrados.length === 0 && (
+                <tr>
+                  <td colSpan="8">Nenhum gasto encontrado.</td>
+                </tr>
+              )}
             </tbody>
           </table>
-        )}
-      </section>
-
-      <section>
-        <h2>Gastos cadastrados</h2>
-
-        <table
-          border="1"
-          cellPadding="10"
-          style={{ borderCollapse: "collapse", width: "100%" }}
-        >
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Data</th>
-              <th>Estabelecimento</th>
-              <th>Categoria</th>
-              <th>Valor</th>
-              <th>Status</th>
-              <th>Imagem</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {gastosFiltrados.map((gasto) => (
-              <tr key={gasto.id}>
-                <td>{gasto.id}</td>
-                <td>{gasto.data_gasto || "-"}</td>
-                <td>{gasto.estabelecimento || "-"}</td>
-                <td>{gasto.categoria || "-"}</td>
-                <td>
-                  {gasto.valor_total
-                    ? `R$ ${Number(gasto.valor_total).toFixed(2)}`
-                    : "-"}
-                </td>
-                <td>{gasto.status_processamento}</td>
-                <td>
-                  {gasto.imagem_url ? (
-                    <a
-                      href={`${API_URL}${gasto.imagem_url}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver imagem
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </td>
-                <td>
-                  <button onClick={() => abrirEdicao(gasto)}>Editar</button>
-                  <button
-                    onClick={() => excluirGasto(gasto.id)}
-                    style={{ marginLeft: 8 }}
-                  >
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {gastosFiltrados.length === 0 && (
-              <tr>
-                <td colSpan="8">Nenhum gasto encontrado.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }
 
